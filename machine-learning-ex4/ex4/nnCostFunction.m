@@ -68,11 +68,13 @@ y_one_hot = y == 1:max(y);
 a_1 = [ones(size(X, 1), 1), X];
 
 % First layer
-a_2 = sigmoid(a_1*Theta1');
+z_2 = a_1*Theta1';
+a_2 = sigmoid(z_2);
 a_2_bias = [ones(size(a_2, 1), 1), a_2];
 
 % Second layer - output layer
-a_3 = sigmoid(a_2_bias*Theta2');
+z_3 = a_2_bias*Theta2';
+a_3 = sigmoid(z_3);
 
 J = ((1/m) * sum(sum( -y_one_hot .* log(a_3) - (1 - y_one_hot).*log(1 - a_3) )));
 
@@ -82,8 +84,27 @@ J += (lambda/(2*m)) * (sum(sum(Theta1(:,2:end).^2)) + sum(sum(Theta2(:,2:end).^2
 
 % =========================================================================
 
+
+
+delta_3 = a_3 - y_one_hot; % (5000 x 10)
+
+delta_2 =  (Theta2' * delta_3') .* sigmoidGradient([ones(size(z_2, 1), 1), z_2])'; % (26 x 5000)
+
+delta_2 = delta_2(2:end, :); % (25 x 5000)
+
+delta_acc_1 = delta_2*a_1; 
+delta_acc_2 = delta_3'*a_2_bias; 
+
+Theta1_grad = (1/m).* delta_acc_1;
+Theta2_grad = (1/m).* delta_acc_2;
+
+Theta1_grad_reg = Theta1_grad + (lambda / m) * Theta1;
+Theta2_grad_reg = Theta2_grad + (lambda / m) * Theta2;
+
+Theta1_grad_reg(:,1) = Theta1_grad(:,1);
+Theta2_grad_reg(:,1) = Theta2_grad(:,1);
 % Unroll gradients
-grad = [Theta1_grad(:) ; Theta2_grad(:)];
+grad = [Theta1_grad_reg(:) ; Theta2_grad_reg(:)];
 
 
 end
